@@ -89,6 +89,20 @@ class TranslationService:
             return "ja"
         if re.search(r"[\u4e00-\u9fff]", text):
             return "zh-cn"
+        if re.search(r"[\u0400-\u052f]", text):
+            return "ru"
+        if re.search(r"[\uac00-\ud7af]", text):
+            return "ko"
+        if re.search(r"[\u0600-\u06ff]", text):
+            return "ar"
+        if re.search(r"[\u0900-\u097f]", text):
+            return "hi"
+        if re.search(r"[\u0e00-\u0e7f]", text):
+            return "th"
+        if re.search(r"[\u0370-\u03ff]", text):
+            return "el"
+        if re.search(r"[\u0590-\u05ff]", text):
+            return "he"
         return None
 
     def translate_to_english(self, text):
