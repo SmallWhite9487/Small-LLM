@@ -1,0 +1,18 @@
+# Local model artifacts and training data
+gpt_checkpoint.pt
+SFT/sft_checkpoint.pt
+raw_text/*
+!raw_text/.gitkeep
+
+# Local Python environments and generated caches
+venv_gpu/
+__pycache__/
+**/__pycache__/
+*.py[codz]
+
+# Local helper scripts
+pull.cmd
+
+# Environment and editor files
+.env
+.vscode/
