@@ -9,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 import torch
+from deep_translator import MyMemoryTranslator
 from flask import Flask, jsonify, request
 from googletrans import Translator
 
@@ -51,6 +52,9 @@ class TranslationService:
 
     def __init__(self, translator=None):
         self.translator = translator
+        self.memory_languages = MyMemoryTranslator(
+            source="english", target="japanese"
+        ).get_supported_languages(as_dict=True)
 
     @staticmethod
     async def _resolve(result):
@@ -61,6 +65,32 @@ class TranslationService:
     def _create_translator(self):
         return self.translator or Translator()
 
+    def _memory_language_name(self, language_code):
+        normalized_code = language_code.lower().replace("_", "-")
+        for name, code in self.memory_languages.items():
+            if code.lower() == normalized_code:
+                return name
+
+        base_code = normalized_code.split("-", 1)[0]
+        for name, code in self.memory_languages.items():
+            if code.lower().split("-", 1)[0] == base_code:
+                return name
+        raise TranslationError(f"Unsupported translation language: {language_code}")
+
+    def _translate(self, text, source_language, target_language):
+        return MyMemoryTranslator(
+            source=self._memory_language_name(source_language),
+            target=self._memory_language_name(target_language),
+        ).translate(text)
+
+    @staticmethod
+    def _detect_script_language(text):
+        if re.search(r"[\u3040-\u30ff]", text):
+            return "ja"
+        if re.search(r"[\u4e00-\u9fff]", text):
+            return "zh-cn"
+        return None
+
     def translate_to_english(self, text):
         try:
             return asyncio.run(self._translate_to_english(text))
@@ -69,13 +99,12 @@ class TranslationService:
 
     async def _translate_to_english(self, text):
         translator = self._create_translator()
-        source_language = (await self._resolve(translator.detect(text))).lang
+        source_language = self._detect_script_language(text)
+        if source_language is None:
+            source_language = (await self._resolve(translator.detect(text))).lang
         if source_language == "en":
             return text, source_language
-        translated = await self._resolve(
-            translator.translate(text, src=source_language, dest="en")
-        )
-        return translated.text, source_language
+        return self._translate(text, source_language, "en"), source_language
 
     def translate_from_english(self, text, target_language):
         if target_language == "en" or not text:
@@ -86,11 +115,7 @@ class TranslationService:
             raise TranslationError(f"Could not translate the response: {error}") from error
 
     async def _translate_from_english(self, text, target_language):
-        translator = self._create_translator()
-        translated = await self._resolve(
-            translator.translate(text, src="en", dest=target_language)
-        )
-        return translated.text
+        return self._translate(text, "en", target_language)
 
 
 def load_model(checkpoint_path):
