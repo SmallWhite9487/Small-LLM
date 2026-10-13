@@ -34,7 +34,7 @@ class InstructionDataset(Dataset):
             prompt_ids = tokenizer.encode(format_prompt(record["instruction"], record.get("input", "")))
             answer_ids = tokenizer.encode(record["output"])
             token_ids = (prompt_ids + answer_ids + [tokenizer.enc.eot_token])[:context_length + 1]
-            if len(token_ids) < 2:
+            if len:
                 continue
 
             input_ids = torch.tensor(token_ids[:-1], dtype=torch.long)

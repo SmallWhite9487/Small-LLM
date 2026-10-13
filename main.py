@@ -335,14 +335,14 @@ if __name__ == "__main__":
     ).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
 
-    train_model(model, dataloader, optimizer, device, epochs=128, max_batches=1024)
+    train_model(model, dataloader, optimizer, device, epochs=256, max_batches=1024)
     print_model_size(model)
     save_model = input("Save the trained model? [y/N]: ").strip().lower()
     if save_model in {"y", "yes"}:
         save_checkpoint(model, optimizer, model_config)
     prompt = "One day,"
     prompt_ids = torch.tensor([tokenizer.encode(prompt)], device=device)
-    generated_ids = model.generate(prompt_ids, max_new_tokens=128, temperature=0.3, top_k=10)
+    generated_ids = model.generate(prompt_ids, max_new_tokens=256, temperature=0.5, top_k=20)
     print("\nGenerated text:\n" + tokenizer.decode(generated_ids[0].tolist()))
 
 #venv_gpu\Scripts\activate

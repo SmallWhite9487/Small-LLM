@@ -3,6 +3,7 @@ gpt_checkpoint.pt
 SFT/sft_checkpoint.pt
 raw_text/*
 !raw_text/.gitkeep
+temp_raw_text/
 
 # Local Python environments and generated caches
 venv_gpu/
