@@ -34,7 +34,7 @@ class InstructionDataset(Dataset):
             prompt_ids = tokenizer.encode(format_prompt(record["instruction"], record.get("input", "")))
             answer_ids = tokenizer.encode(record["output"])
             token_ids = (prompt_ids + answer_ids + [tokenizer.enc.eot_token])[:context_length + 1]
-            if len:
+            if len(token_ids) < 2:
                 continue
 
             input_ids = torch.tensor(token_ids[:-1], dtype=torch.long)
@@ -68,7 +68,7 @@ def main():
     parser.add_argument("--checkpoint", type=Path, default=PROJECT_ROOT / "gpt_checkpoint.pt")
     parser.add_argument("--data", type=Path, default=Path(__file__).with_name("instructions.jsonl"))
     parser.add_argument("--output", type=Path, default=Path(__file__).with_name("sft_checkpoint.pt"))
-    parser.add_argument("--epochs", type=int, default=648)
+    parser.add_argument("--epochs", type=int, default=1024)
     parser.add_argument("--batch-size", type=int, default=24)
     parser.add_argument("--learning-rate", type=float, default=1e-5)
     args = parser.parse_args()

@@ -1,6 +1,8 @@
 import os
 import re
 import sys
+from pathlib import Path
+
 import tiktoken
 import torch
 import torch.nn as nn
@@ -74,15 +76,21 @@ class Tokenizer:
 
 class FileProcessor:
     def __init__(self, file_path):
-        self.files = [f for f in os.listdir(file_path) if os.path.isfile(os.path.join(file_path, f))]
-        self.raw_text = ""
-        for file_name in self.files:
-            self.raw_text += self.from_file(os.path.join(file_path, file_name))
+        root = Path(file_path)
+        self.files = sorted(path for path in root.rglob("*.txt") if path.is_file())
+        if not self.files:
+            raise ValueError(f"No .txt training files found in: {root}")
+
+        text_parts = []
+        file_count = len(self.files)
+        for index, path in enumerate(self.files, start=1):
+            text_parts.append(self.from_file(path))
+            if index % 100 == 0 or index == file_count:
+                print(f"Loaded {index}/{file_count} training files.")
+        self.raw_text = "\n\n".join(text_parts)
 
     def from_file(self, file_path):
-        with open(file_path, "r", encoding="utf-8") as f:
-            text = f.read()
-            return text
+        return Path(file_path).read_text(encoding="utf-8")
 
 class GPTDataset(Dataset):
     def __init__(self, txt, tokenizer, max_length, stride):
@@ -335,7 +343,7 @@ if __name__ == "__main__":
     ).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
 
-    train_model(model, dataloader, optimizer, device, epochs=256, max_batches=1024)
+    train_model(model, dataloader, optimizer, device, epochs=384, max_batches=1024)
     print_model_size(model)
     save_model = input("Save the trained model? [y/N]: ").strip().lower()
     if save_model in {"y", "yes"}:
